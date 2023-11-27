@@ -1,4 +1,5 @@
 ﻿using DTOModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +14,7 @@ namespace UddanelsesAPI.Controllers
         [HttpGet("")]
         public async Task<IActionResult> GetAllSubjects()
         {
-            var subjects = await db.Set<Subject>().Select(x => new DTOSubject { Id = x.Id, Name = x.Name }).ToListAsync();
+            var subjects = await db.Set<Subject>().Select(x => new DTOSubject { Id = x.GUID, Name = x.Name }).ToListAsync();
             return Ok(subjects);
         }
 
@@ -32,12 +33,12 @@ namespace UddanelsesAPI.Controllers
             var sbj = new Subject { Name = subject.Name };
             await db.Set<Subject>().AddAsync(sbj);
             await db.SaveChangesAsync();
-            subject.Id = sbj.Id;
+            subject.Id = sbj.GUID;
 
             return CreatedAtAction(nameof(AddSubject), subject);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{subjectid}")]
        public async Task<IActionResult> DeleteSubject(int id)
         {
             var subject = await db.Set<Subject>().Where(x => x.Id == id).FirstOrDefaultAsync();
@@ -47,7 +48,7 @@ namespace UddanelsesAPI.Controllers
             db.Set<Subject>().Remove(subject);
             await db.SaveChangesAsync();
 
-            return Ok(new DTOSubject { Id = subject.Id, Name = subject.Name});
+            return Ok(new DTOSubject { Id = subject.GUID, Name = subject.Name});
         }
     }
 }
