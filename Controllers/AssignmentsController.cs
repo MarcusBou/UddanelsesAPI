@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using UddanelsesAPI.DTOModels;
 using UddanelsesAPI.Models;
 
 namespace UddanelsesAPI.Controllers
@@ -19,7 +20,7 @@ namespace UddanelsesAPI.Controllers
                             Where(x => x.SubjectId == subject.Id && x.GUID == moduleid)
                         from assignment in db.Set<Assignment>().
                             Where(x => x.ModuleId == module.Id)
-                        select new DTOAssignment { Id = assignment.GUID, Name = assignment.Name, Answer = assignment.Answer, Question = assignment.Question, Type = assignment.Type };
+                        select new DTOAssignment { Id = assignment.GUID, Name = assignment.Name };
             var assignments = await query.ToListAsync();
             return Ok(assignments);
         }
@@ -33,7 +34,7 @@ namespace UddanelsesAPI.Controllers
                             Where(x => x.SubjectId == subject.Id && x.GUID == moduleid)
                         from assignment in db.Set<Assignment>().
                             Where(x => x.ModuleId == module.Id && x.GUID == assignmentid)
-                        select new DTOAssignment { Id = assignment.GUID, Name = assignment.Name, Answer = assignment.Answer, Question = assignment.Question, Type = assignment.Type };
+                        select new DTOAssignmentWithQA { Id = assignment.GUID, Name = assignment.Name, Answer = assignment.Answer, Question = assignment.Question, Type = assignment.Type };
             var asm = await query.FirstOrDefaultAsync();
             if (asm == null)
                 return NotFound("Assignment not found");
@@ -41,7 +42,7 @@ namespace UddanelsesAPI.Controllers
         }
 
         [HttpPost("/api/Subjects/{subjectid}/Modules/{moduleid}")]
-        public async Task<IActionResult> CreateAssignmentInModule([FromRoute] Guid subjectid, [FromRoute] Guid moduleid, [FromBody] DTOAssignment assignment)
+        public async Task<IActionResult> CreateAssignmentInModule([FromRoute] Guid subjectid, [FromRoute] Guid moduleid, [FromBody] DTOAssignmentWithQA assignment)
         {
             assignment.Name = assignment.Name.Trim();
             var query = from subject in db.Set<Subject>().
