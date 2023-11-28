@@ -12,6 +12,7 @@ namespace DTOModels
         public string Name { get; set; }
         public string Question { get; set; }
         public string Answer { get; set; }
+        public string? Video { get; set; }
         public string Type { get; set; }
     }
 }
