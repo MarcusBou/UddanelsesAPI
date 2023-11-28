@@ -56,7 +56,14 @@ namespace UddanelsesAPI.Controllers
             if (await db.Set<Assignment>().AnyAsync(x => x.ModuleId == mdl.Id && x.Name == assignment.Name))
                 return BadRequest("Assignment with that name already exist");
 
-            var asm = new Assignment { Name = assignment.Name, ModuleId = mdl.Id };
+            var asm = new Assignment { 
+                Name = assignment.Name, 
+                ModuleId = mdl.Id, 
+                Answer = assignment.Answer,
+                Question = assignment.Question,
+                Video = assignment.Video,
+                Type = assignment.Type,
+            };
             await db.Set<Assignment>().AddAsync(asm);
             await db.SaveChangesAsync();
 

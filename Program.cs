@@ -34,7 +34,6 @@ builder.Services.AddAuthentication(x =>
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
-_context.Database.EnsureDeleted();
 _context.Database.EnsureCreated();
 
 // Configure the HTTP request pipeline.
