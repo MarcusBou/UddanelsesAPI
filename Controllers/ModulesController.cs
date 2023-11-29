@@ -20,7 +20,9 @@ namespace UddanelsesAPI.Controllers
         {
             var query = from subject in db.Set<Subject>().
                             Where(x => x.GUID == subjectid)
-                        select subject.Modules.Select(x => new DTOModule { Id = x.GUID, Name = x.Name });
+                        from module in db.Set<Module>().
+                            Where(x => x.SubjectId == subject.Id)
+                        select new DTOModule { Id = module.GUID, Name = module.Name };
             var modules = await query.ToListAsync();
             return Ok(modules);
         }
