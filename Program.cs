@@ -5,7 +5,7 @@ using UddanelsesAPI;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
-var _context = new EducationContext();
+var _context = new EducationContext(config);
 
 // Add services to the container.
 

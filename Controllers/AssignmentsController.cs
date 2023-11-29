@@ -7,11 +7,16 @@ using UddanelsesAPI.Models;
 
 namespace UddanelsesAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class AssignmentsController : MyBaseController
     {
-        [HttpGet("/api/Subjects/{subjectid}/Modules/{moduleid}")]
+        public AssignmentsController(IConfiguration configuration) : base(configuration)
+        {
+            
+        }
+
+        [HttpGet("/Subjects/{subjectid}/Modules/{moduleid}")]
         public async Task<IActionResult> GetAllAssignmentsUnderModule([FromRoute] Guid subjectid, [FromRoute] Guid moduleid)
         {
             var query = from subject in db.Set<Subject>().
@@ -25,7 +30,7 @@ namespace UddanelsesAPI.Controllers
             return Ok(assignments);
         }
 
-        [HttpGet("/api/Subjects/{subjectid}/Modules/{moduleid}/Assignments/{assignmentid}")]
+        [HttpGet("/Subjects/{subjectid}/Modules/{moduleid}/Assignments/{assignmentid}")]
         public async Task<IActionResult> GetAnAssignment([FromRoute] Guid subjectid, [FromRoute] Guid moduleid, [FromRoute] Guid assignmentid)
         {
             var query = from subject in db.Set<Subject>().
@@ -41,7 +46,7 @@ namespace UddanelsesAPI.Controllers
             return Ok(asm);
         }
 
-        [HttpPost("/api/Subjects/{subjectid}/Modules/{moduleid}")]
+        [HttpPost("/Subjects/{subjectid}/Modules/{moduleid}")]
         public async Task<IActionResult> CreateAssignmentInModule([FromRoute] Guid subjectid, [FromRoute] Guid moduleid, [FromBody] DTOAssignmentWithQA assignment)
         {
             assignment.Name = assignment.Name.Trim();
@@ -73,7 +78,7 @@ namespace UddanelsesAPI.Controllers
         }
 
         
-        [HttpDelete("/api/Subjects/{subjectid}/Modules/{moduleid}/Assignments/{assignmentid}")]
+        [HttpDelete("/Subjects/{subjectid}/Modules/{moduleid}/Assignments/{assignmentid}")]
         public async Task<IActionResult> DeleteAnAssignment([FromRoute] Guid subjectid, [FromRoute] Guid moduleid, [FromRoute] Guid assignmentid)
         {
             var query = from subject in db.Set<Subject>().

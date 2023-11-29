@@ -6,9 +6,9 @@ namespace UddanelsesAPI
     public class MyBaseController : ControllerBase
     {
         protected EducationContext db { get; set; }
-        public MyBaseController()
+        public MyBaseController(IConfiguration configuration)
         {
-            db = new EducationContext();
+            db = new EducationContext(configuration);
         }
     }
 }

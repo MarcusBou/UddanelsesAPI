@@ -7,10 +7,15 @@ using UddanelsesAPI.Models;
 
 namespace UddanelsesAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class SubjectsController : MyBaseController
     {
+        public SubjectsController(IConfiguration configuration) : base(configuration)
+        {
+
+        }
+
         [HttpGet("")]
         public async Task<IActionResult> GetAllSubjects()
         {

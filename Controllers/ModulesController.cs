@@ -6,11 +6,16 @@ using DTOModels;
 
 namespace UddanelsesAPI.Controllers
 {
-    [Route("api/Subjects/{subjectid}/[controller]")]
+    [Route("Subjects/{subjectid}/[controller]")]
     [ApiController]
     public class ModulesController : MyBaseController
     {
-        [HttpGet("/api/Subjects/{subjectid}/Modules")]
+        public ModulesController(IConfiguration configuration) : base(configuration)
+        {
+
+        }
+
+        [HttpGet("/Subjects/{subjectid}/Modules")]
         public async Task<IActionResult> GetAllModules([FromRoute] Guid subjectid)
         {
             var query = from subject in db.Set<Subject>().
@@ -20,7 +25,7 @@ namespace UddanelsesAPI.Controllers
             return Ok(modules);
         }
 
-        [HttpPost("/api/Subjects/{subjectid}/Modules")]
+        [HttpPost("/Subjects/{subjectid}/Modules")]
         public async Task<IActionResult> CreateModuleUnderSubject([FromRoute] Guid subjectid, [FromBody] DTOModule module)
         {
             module.Name = module.Name.Trim();
@@ -43,7 +48,7 @@ namespace UddanelsesAPI.Controllers
             return CreatedAtAction(nameof(CreateModuleUnderSubject), module);
         }
 
-        [HttpDelete("/api/Subjects/{subjectid}/Modules/{moduleid}")]
+        [HttpDelete("/Subjects/{subjectid}/Modules/{moduleid}")]
         public async Task<IActionResult> DeleteModule([FromRoute] Guid subjectid, [FromRoute] Guid moduleid)
         {
             var subject = await db.Set<Subject>().Where(x => x.GUID == subjectid).FirstOrDefaultAsync();

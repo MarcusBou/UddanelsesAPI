@@ -9,10 +9,15 @@ using UddanelsesAPI.Models;
 
 namespace UddanelsesAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class AuthController : MyBaseController
     {
+        public AuthController(IConfiguration configuration) : base(configuration)
+        {
+
+        }
+
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] DTOUserModel user)
         {
