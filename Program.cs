@@ -37,7 +37,7 @@ var app = builder.Build();
 _context.Database.EnsureCreated();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || true)
 {
     app.UseSwagger();
     app.UseSwaggerUI();
