@@ -44,9 +44,9 @@ namespace UddanelsesAPI.Controllers
         }
 
         [HttpDelete("{subjectid}")]
-       public async Task<IActionResult> DeleteSubject(int id)
+       public async Task<IActionResult> DeleteSubject(Guid subjectid)
         {
-            var subject = await db.Set<Subject>().Where(x => x.Id == id).FirstOrDefaultAsync();
+            var subject = await db.Set<Subject>().Where(x => x.GUID == subjectid).FirstOrDefaultAsync();
             if (subject == null)
                 return NotFound("We couldnt find the subject");
 
