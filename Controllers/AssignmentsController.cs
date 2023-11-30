@@ -39,14 +39,14 @@ namespace UddanelsesAPI.Controllers
                             Where(x => x.SubjectId == subject.Id && x.GUID == moduleid)
                         from assignment in db.Set<Assignment>().
                             Where(x => x.ModuleId == module.Id)
-                        select new DTOAssignmentWithQA { Id = assignment.GUID, Name = assignment.Name, Answer = assignment.Answer, Question = assignment.Question, Type = assignment.Type };
+                        select new DTOAssignmentWithQA { Id = assignment.GUID, Name = assignment.Name, Answer = assignment.Answer, Question = assignment.Question, Type = assignment.Type, Video = assignment.Video };
             var assignments = await query.ToListAsync();
             var asm = assignments.Where(x => x.Id == assignmentid).FirstOrDefault();
             if (asm == null)
                 return NotFound("Assignment not found");
             var index = assignments.FindIndex(x => x.Id == assignmentid);
             if (index < assignments.Count -1)
-                asm.NextAssignmentId = assignments.Skip(index).Select(x => x.Id).FirstOrDefault();
+                asm.NextAssignmentId = assignments.Skip(index + +1).Select(x => x.Id).FirstOrDefault();
             return Ok(asm);
         }
 
