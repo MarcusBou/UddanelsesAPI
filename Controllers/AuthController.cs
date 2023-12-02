@@ -3,6 +3,9 @@ using Konscious.Security.Cryptography;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using UddanelsesAPI.Models;
@@ -13,9 +16,10 @@ namespace UddanelsesAPI.Controllers
     [ApiController]
     public class AuthController : MyBaseController
     {
+        private IConfiguration configuration;
         public AuthController(IConfiguration configuration) : base(configuration)
         {
-
+            this.configuration = configuration;
         }
 
         [HttpPost("register")]
@@ -45,9 +49,11 @@ namespace UddanelsesAPI.Controllers
                 return BadRequest("Username or Password was incorrect");
             var test = HashPasswordArgon2(Encoding.UTF8.GetBytes(user.Password), usr.salt);
             if (!test.SequenceEqual(usr.Password))
-                return BadRequest("Username or Password was incorrect");             
+                return BadRequest("Username or Password was incorrect");
 
-            return Ok();
+            var token = GenerateToken(usr);
+
+            return Ok(token);
         }
 
         private byte[] GenerateRandomSalt()
@@ -67,6 +73,28 @@ namespace UddanelsesAPI.Controllers
             argon2.MemorySize = 1024 * 128;
 
             return argon2.GetBytes(32);
+        }
+
+        private string GenerateToken(User user)
+        {
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetSection("JwtSetttings:Key").Value!));
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Name, user.Username),
+                new Claim(JwtRegisteredClaimNames.Iss, configuration.GetSection("JwtSetttings:Issuer").Value!),
+                new Claim(JwtRegisteredClaimNames.Aud, configuration.GetSection("JwtSetttings:Audience").Value!),
+            };
+
+            var token = new JwtSecurityToken(
+                    claims: claims,
+                    expires: DateTime.UtcNow.AddHours(2),
+                    signingCredentials: credentials
+                );
+
+            var jwt = new JwtSecurityTokenHandler().WriteToken(token);
+            return jwt;
         }
     }
 }

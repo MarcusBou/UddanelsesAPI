@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UddanelsesAPI.Models;
 using DTOModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace UddanelsesAPI.Controllers
 {
@@ -15,6 +16,7 @@ namespace UddanelsesAPI.Controllers
 
         }
 
+        
         [HttpGet("/Subjects/{subjectid}/Modules")]
         public async Task<IActionResult> GetAllModules([FromRoute] Guid subjectid)
         {
@@ -27,6 +29,7 @@ namespace UddanelsesAPI.Controllers
             return Ok(modules);
         }
 
+        [Authorize]
         [HttpPost("/Subjects/{subjectid}/Modules")]
         public async Task<IActionResult> CreateModuleUnderSubject([FromRoute] Guid subjectid, [FromBody] DTOModule module)
         {
@@ -50,6 +53,8 @@ namespace UddanelsesAPI.Controllers
             return CreatedAtAction(nameof(CreateModuleUnderSubject), module);
         }
 
+
+        [Authorize]
         [HttpDelete("/Subjects/{subjectid}/Modules/{moduleid}")]
         public async Task<IActionResult> DeleteModule([FromRoute] Guid subjectid, [FromRoute] Guid moduleid)
         {

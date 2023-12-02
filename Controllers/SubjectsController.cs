@@ -23,7 +23,7 @@ namespace UddanelsesAPI.Controllers
             return Ok(subjects);
         }
 
-        
+        [Authorize]
         [HttpPost("")]
         public async Task<IActionResult> AddSubject(DTOSubject subject)
         {
@@ -43,8 +43,9 @@ namespace UddanelsesAPI.Controllers
             return CreatedAtAction(nameof(AddSubject), subject);
         }
 
+        [Authorize]
         [HttpDelete("{subjectid}")]
-       public async Task<IActionResult> DeleteSubject(Guid subjectid)
+        public async Task<IActionResult> DeleteSubject(Guid subjectid)
         {
             var subject = await db.Set<Subject>().Where(x => x.GUID == subjectid).FirstOrDefaultAsync();
             if (subject == null)

@@ -1,4 +1,5 @@
 ﻿using DTOModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -50,6 +51,8 @@ namespace UddanelsesAPI.Controllers
             return Ok(asm);
         }
 
+
+        [Authorize]
         [HttpPost("/Subjects/{subjectid}/Modules/{moduleid}")]
         public async Task<IActionResult> CreateAssignmentInModule([FromRoute] Guid subjectid, [FromRoute] Guid moduleid, [FromBody] DTOAssignmentWithQA assignment)
         {
@@ -81,7 +84,8 @@ namespace UddanelsesAPI.Controllers
             return CreatedAtAction(nameof(CreateAssignmentInModule), assignment);
         }
 
-        
+
+        [Authorize]
         [HttpDelete("/Subjects/{subjectid}/Modules/{moduleid}/Assignments/{assignmentid}")]
         public async Task<IActionResult> DeleteAnAssignment([FromRoute] Guid subjectid, [FromRoute] Guid moduleid, [FromRoute] Guid assignmentid)
         {
