@@ -53,7 +53,7 @@ namespace UddanelsesAPI.Controllers
 
             var token = GenerateToken(usr);
 
-            return Ok(token);
+            return Ok(new { token = token});
         }
 
         private byte[] GenerateRandomSalt()
