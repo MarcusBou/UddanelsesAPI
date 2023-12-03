@@ -32,6 +32,7 @@ builder.Services.AddAuthentication(x =>
     };
 });
 
+
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
@@ -50,6 +51,13 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.UseCors();
+app.UseCors(builder =>
+{
+    builder
+        .AllowAnyHeader()
+        .AllowCredentials()
+        .WithMethods("GET", "PUT", "POST", "DELETE", "OPTIONS")
+        .SetPreflightMaxAge(TimeSpan.FromSeconds(3600));
+});
 
 app.Run();
