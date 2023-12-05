@@ -17,93 +17,108 @@ namespace UddanelsesAPI.Controllers
             
         }
 
+        /// <summary>
+        /// Get all the assignements under a module in a subject
+        /// </summary>
+        /// <param name="subjectid"></param>
+        /// <param name="moduleid"></param>
+        /// <returns></returns>
         [HttpGet("/Subjects/{subjectid}/Modules/{moduleid}")]
         public async Task<IActionResult> GetAllAssignmentsUnderModule([FromRoute] Guid subjectid, [FromRoute] Guid moduleid)
         {
-            var query = from subject in db.Set<Subject>().
-                            Where(x => x.GUID == subjectid)
-                        from module in db.Set<Module>().
-                            Where(x => x.SubjectId == subject.Id && x.GUID == moduleid)
-                        from assignment in db.Set<Assignment>().
-                            Where(x => x.ModuleId == module.Id)
-                        select new DTOAssignment { Id = assignment.GUID, Name = assignment.Name };
-            var assignments = await query.ToListAsync();
+            //Get all assignments under a module in a subject
+            var assignments = await dbmanager.GetAllAssignments(subjectid, moduleid);
+            //Turn them into DTO's
+            var dtos = assignments.Select(x => new DTOAssignment { Id = x.GUID, Name = x.Name });
+            //Return the DTO's
             return Ok(assignments);
         }
 
+        /// <summary>
+        /// Get an assignement with the next assignment value stored
+        /// </summary>
+        /// <param name="subjectid"></param>
+        /// <param name="moduleid"></param>
+        /// <param name="assignmentid"></param>
+        /// <returns></returns>
         [HttpGet("/Subjects/{subjectid}/Modules/{moduleid}/Assignments/{assignmentid}")]
         public async Task<IActionResult> GetAnAssignment([FromRoute] Guid subjectid, [FromRoute] Guid moduleid, [FromRoute] Guid assignmentid)
         {
-            var query = from subject in db.Set<Subject>().
-                            Where(x => x.GUID == subjectid)
-                        from module in db.Set<Module>().
-                            Where(x => x.SubjectId == subject.Id && x.GUID == moduleid)
-                        from assignment in db.Set<Assignment>().
-                            Where(x => x.ModuleId == module.Id)
-                        select new DTOAssignmentWithQA { Id = assignment.GUID, Name = assignment.Name, Answer = assignment.Answer, Question = assignment.Question, Type = assignment.Type, Video = assignment.Video };
-            var assignments = await query.ToListAsync();
-            var asm = assignments.Where(x => x.Id == assignmentid).FirstOrDefault();
+            //Get all assignments
+            var assignments = await dbmanager.GetAllAssignments(subjectid, moduleid);
+
+            //Get the specific assignment and prepare the DTO
+            var asm = assignments.Where(x => x.GUID == assignmentid).
+                Select(x => new DTOAssignmentWithQA { Id = x.GUID, Name = x.Name, Answer = x.Answer, Question = x.Question, Type = x.Type, Video = x.Video}).
+                FirstOrDefault();
             if (asm == null)
                 return NotFound("Assignment not found");
-            var index = assignments.FindIndex(x => x.Id == assignmentid);
+
+            //Find the assignment index
+            var index = assignments.FindIndex(x => x.GUID == assignmentid);
             if (index < assignments.Count -1)
-                asm.NextAssignmentId = assignments.Skip(index + +1).Select(x => x.Id).FirstOrDefault();
+                //Get the next assignment after the one choosen
+                asm.NextAssignmentId = assignments.Skip(index + +1).Select(x => x.GUID).FirstOrDefault();
+
             return Ok(asm);
         }
 
 
+        /// <summary>
+        /// Create an assignment under a module in a subject
+        /// </summary>
+        /// <param name="subjectid"></param>
+        /// <param name="moduleid"></param>
+        /// <param name="assignment"></param>
+        /// <returns></returns>
         [Authorize]
         [HttpPost("/Subjects/{subjectid}/Modules/{moduleid}")]
         public async Task<IActionResult> CreateAssignmentInModule([FromRoute] Guid subjectid, [FromRoute] Guid moduleid, [FromBody] DTOAssignmentWithQA assignment)
         {
-            assignment.Name = assignment.Name.Trim();
-            var query = from subject in db.Set<Subject>().
-                            Where(x => x.GUID == subjectid)
-                        from module in db.Set<Module>().
-                            Where(x => x.SubjectId == subject.Id && x.GUID == moduleid)
-                        select module;
-            var mdl = query.FirstOrDefault();
-            if (mdl == null)
-                return NotFound("Module couldnt be found");
+            var subject = await dbmanager.GetASubject(subjectid);
+            if (subject == null)
+                return NotFound("Couldnt find the subject");
 
-            if (await db.Set<Assignment>().AnyAsync(x => x.ModuleId == mdl.Id && x.Name == assignment.Name))
+            var module = await dbmanager.GetAModule(subject.Id, moduleid);
+            if (module == null)
+                return NotFound("Module not found");
+
+            if (await dbmanager.CheckAssignmentName(module.Id, assignment.Name))
                 return BadRequest("Assignment with that name already exist");
 
-            var asm = new Assignment { 
-                Name = assignment.Name, 
-                ModuleId = mdl.Id, 
-                Answer = assignment.Answer,
-                Question = assignment.Question,
-                Video = assignment.Video,
-                Type = assignment.Type,
-            };
-            await db.Set<Assignment>().AddAsync(asm);
-            await db.SaveChangesAsync();
+            var asm = await dbmanager.CreateAssignment(module.Id, assignment);
 
             assignment.Id = asm.GUID;
+
             return CreatedAtAction(nameof(CreateAssignmentInModule), assignment);
         }
 
-
+        /// <summary>
+        /// Delete an assigment under a module in a subject
+        /// </summary>
+        /// <param name="subjectid"></param>
+        /// <param name="moduleid"></param>
+        /// <param name="assignmentid"></param>
+        /// <returns></returns>
         [Authorize]
         [HttpDelete("/Subjects/{subjectid}/Modules/{moduleid}/Assignments/{assignmentid}")]
         public async Task<IActionResult> DeleteAnAssignment([FromRoute] Guid subjectid, [FromRoute] Guid moduleid, [FromRoute] Guid assignmentid)
         {
-            var query = from subject in db.Set<Subject>().
-                            Where(x => x.GUID == subjectid)
-                        from module in db.Set<Module>().
-                            Where(x => x.SubjectId == subject.Id && x.GUID == moduleid)
-                        from assignment in db.Set<Assignment>().
-                            Where(x => x.ModuleId == module.Id && x.GUID == assignmentid)
-                        select assignment;
-            var asm = await query.FirstOrDefaultAsync();
-            if (asm == null)
+            var subject = await dbmanager.GetASubject(subjectid);
+            if (subject == null)
+                return NotFound("Couldnt find the subject");
+
+            var module = await dbmanager.GetAModule(subject.Id, moduleid);
+            if (module == null)
+                return NotFound("Module not found");
+
+            var assignment = await dbmanager.GetAnAssignment(module.Id, assignmentid);
+            if (assignment == null)
                 return NotFound("Assignment not found");
 
-            db.Set<Assignment>().Remove(asm);
-            await db.SaveChangesAsync();
+            await dbmanager.DeleteAssignment(assignment);
 
-            var dto = new DTOAssignment { Name = asm.Name, Id = asm.GUID };
+            var dto = new DTOAssignment { Name = assignment.Name, Id = assignment.GUID };
             return Ok(dto);
         }
     }

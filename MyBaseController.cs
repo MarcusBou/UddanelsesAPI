@@ -1,14 +1,15 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using UddanelsesAPI.Managers;
 
 namespace UddanelsesAPI
 {
     public class MyBaseController : ControllerBase
     {
-        protected EducationContext db { get; set; }
+        protected DBManager dbmanager;
         public MyBaseController(IConfiguration configuration)
         {
-            db = new EducationContext(configuration);
+            dbmanager = new DBManager(configuration);
         }
     }
 }

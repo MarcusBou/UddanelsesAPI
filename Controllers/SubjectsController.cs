@@ -16,13 +16,26 @@ namespace UddanelsesAPI.Controllers
 
         }
 
+        /// <summary>
+        /// Get all subjects
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("")]
         public async Task<IActionResult> GetAllSubjects()
         {
-            var subjects = await db.Set<Subject>().Select(x => new DTOSubject { Id = x.GUID, Name = x.Name }).ToListAsync();
-            return Ok(subjects);
+            //Get all Subjects
+            var subjects = await dbmanager.GetAllSubjects();
+            //Convert Subjects to DTO's
+            var dtos = subjects.Select(x => new DTOSubject { Id = x.GUID, Name = x.Name }).ToList();
+            //Return in a OK : 200 code
+            return Ok(dtos);
         }
 
+        /// <summary>
+        /// Add a subject
+        /// </summary>
+        /// <param name="subject"></param>
+        /// <returns></returns>
         [Authorize]
         [HttpPost("")]
         public async Task<IActionResult> AddSubject(DTOSubject subject)
@@ -30,29 +43,30 @@ namespace UddanelsesAPI.Controllers
             subject.Name = subject.Name.Trim();
             if (subject.Name.Equals(String.Empty))
                 return BadRequest("You need to give the subject a name");
-
-            var IsExisting = await db.Set<Subject>().AnyAsync(x => x.Name.Equals(subject.Name));
-            if (IsExisting)
+          
+            if (await dbmanager.CheckSubjectName(subject.Name))
                 return BadRequest("Name already exist");
 
-            var sbj = new Subject { Name = subject.Name };
-            await db.Set<Subject>().AddAsync(sbj);
-            await db.SaveChangesAsync();
+            var sbj = await dbmanager.CreateSubject(subject);
             subject.Id = sbj.GUID;
 
             return CreatedAtAction(nameof(AddSubject), subject);
         }
 
+        /// <summary>
+        /// Delete a subject
+        /// </summary>
+        /// <param name="subjectid"></param>
+        /// <returns></returns>
         [Authorize]
         [HttpDelete("{subjectid}")]
         public async Task<IActionResult> DeleteSubject(Guid subjectid)
         {
-            var subject = await db.Set<Subject>().Where(x => x.GUID == subjectid).FirstOrDefaultAsync();
+            var subject = await dbmanager.GetASubject(subjectid);
             if (subject == null)
                 return NotFound("We couldnt find the subject");
 
-            db.Set<Subject>().Remove(subject);
-            await db.SaveChangesAsync();
+            await dbmanager.DeleteSubject(subject);
 
             return Ok(new DTOSubject { Id = subject.GUID, Name = subject.Name});
         }
