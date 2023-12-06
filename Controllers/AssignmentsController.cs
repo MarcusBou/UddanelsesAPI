@@ -31,7 +31,7 @@ namespace UddanelsesAPI.Controllers
             //Turn them into DTO's
             var dtos = assignments.Select(x => new DTOAssignment { Id = x.GUID, Name = x.Name });
             //Return the DTO's
-            return Ok(assignments);
+            return Ok(dtos);
         }
 
         /// <summary>
