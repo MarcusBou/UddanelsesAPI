@@ -13,6 +13,7 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 builder.Services.AddAuthentication(x =>
 {
     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -30,6 +31,7 @@ builder.Services.AddAuthentication(x =>
         ValidateIssuerSigningKey = true,
     };
 });
+
 
 builder.Services.AddAuthorization();
 
@@ -53,11 +55,10 @@ app.MapControllers();
 app.UseCors(builder =>
 {
     builder
-       .AllowAnyHeader()
-       .AllowCredentials()
-       .WithMethods("GET", "PUT", "POST", "DELETE", "OPTIONS")
-       .SetPreflightMaxAge(TimeSpan.FromSeconds(3600));
-}
-);
+        .AllowAnyHeader()
+        .AllowCredentials()
+        .WithMethods("GET", "PUT", "POST", "DELETE", "OPTIONS")
+        .SetPreflightMaxAge(TimeSpan.FromSeconds(3600));
+});
 
 app.Run();

@@ -1,72 +1,71 @@
 ﻿using DTOModels;
 using Konscious.Security.Cryptography;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using UddanelsesAPI.Managers;
 using UddanelsesAPI.Models;
 
 namespace UddanelsesAPI.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    public class AuthController : MyBaseController
+    public class AuthController : ControllerBase
     {
-        public AuthController(IConfiguration configuration) : base(configuration)
+        private IConfiguration configuration;
+        private AuthManager authmanager;
+        public AuthController(IConfiguration configuration)
         {
-
+            this.configuration = configuration;
+            this.authmanager = new AuthManager(configuration);
         }
 
+        /// <summary>
+        /// Register a new user to the api
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] DTOUserModel user)
         {
+
             user.Username = user.Username.Trim();
-            var usr = await db.Set<User>().Where(x => x.Username == user.Username).FirstOrDefaultAsync();
+
+            var usr = await authmanager.GetUserByUsername(user.Username);
             if (usr != null)
                 return BadRequest("Username already exist");
 
-            var salt = GenerateRandomSalt();
-            var hashed = HashPasswordArgon2(Encoding.UTF8.GetBytes(user.Password), salt);
-
-            usr = new User { Username = user.Username, Password = hashed, salt = salt };
-            await db.Set<User>().AddAsync(usr);
-            await db.SaveChangesAsync();
-
+            await authmanager.Register(user);
             return Ok();
-
         }
+
+        /// <summary>
+        /// Login, and acquire a token that is valid for the REST API
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
         [HttpPost]
         public async Task<IActionResult> Login([FromBody] DTOUserModel user)
         {
             user.Username = user.Username.Trim();
-            var usr = await db.Set<User>().Where(x => x.Username == user.Username).FirstOrDefaultAsync();
+
+            var usr = await authmanager.GetUserByUsername(user.Username);
             if (usr == null)
                 return BadRequest("Username or Password was incorrect");
-            var test = HashPasswordArgon2(Encoding.UTF8.GetBytes(user.Password), usr.salt);
-            if (!test.SequenceEqual(usr.Password))
-                return BadRequest("Username or Password was incorrect");             
 
-            return Ok();
+            var token = authmanager.Login(user.Password, usr);
+            if (token == null)
+                return BadRequest("Username or Password was incorrect");
+
+            return Ok(new {token = token});
         }
 
-        private byte[] GenerateRandomSalt()
-        {
-            var buffer = new byte[32];
-            var rng = new RNGCryptoServiceProvider();   
-            rng.GetBytes(buffer);
-            return buffer;
-        }
-
-        private Byte[] HashPasswordArgon2(byte[] password, byte[] salt)
-        {
-            using var argon2 = new Argon2id(password);
-            argon2.Salt = salt;
-            argon2.DegreeOfParallelism = 8;
-            argon2.Iterations = 4;
-            argon2.MemorySize = 1024 * 128;
-
-            return argon2.GetBytes(32);
-        }
+       
     }
 }
