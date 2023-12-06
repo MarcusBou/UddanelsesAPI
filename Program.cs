@@ -35,6 +35,7 @@ builder.Services.AddAuthentication(x =>
 
 builder.Services.AddAuthorization();
 
+
 var app = builder.Build();
 _context.Database.EnsureCreated();
 
